@@ -1,32 +1,34 @@
-const Vendor = require('../models/Vendor');
-const jwt = require('jsonwebtoken');
-const { validationResult } = require('express-validator');
+// ... imports and helper functions ...
 
-const generateToken = (id, role) => jwt.sign({ id, role }, process.env.JWT_SECRET, { expiresIn: '30d' });
+const registerVendor = async (req, res) => { /* ... implementation ... */ };
 
-const registerVendor = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  const { name, email, password, shopName } = req.body;
-  const exists = await Vendor.findOne({ email });
-  if (exists) return res.status(400).json({ message: 'Vendor exists' });
-  const vendor = await Vendor.create({ name, email, password, shopName });
-  res.status(201).json({ _id: vendor._id, name: vendor.name, email: vendor.email, shopName: vendor.shopName, role: vendor.role, token: generateToken(vendor._id, vendor.role) });
+const loginVendor = async (req, res) => { /* ... implementation ... */ };
+
+const listVendors = async (req, res) => { 
+    // ... implementation ...
+    res.json(vendors); // <-- Sends the list of vendors
 };
 
-const loginVendor = async (req, res) => {
-  const { email, password } = req.body;
-  const vendor = await Vendor.findOne({ email });
-  if (vendor && (await vendor.matchPassword(password))) {
-    res.json({ _id: vendor._id, name: vendor.name, email: vendor.email, shopName: vendor.shopName, role: vendor.role, token: generateToken(vendor._id, vendor.role) });
-  } else {
-    res.status(401).json({ message: 'Invalid credentials' });
-  }
-};
+module.exports = { registerVendor, loginVendor, listVendors }; // <-- All three are exported!
+```
 
-const listVendors = async (req, res) => {
-  const vendors = await Vendor.find().select('-password');
-  res.json(vendors);
-};
+**Conclusion on Backend Error:**
 
-module.exports = { registerVendor, loginVendor, listVendors };
+The error is **not** in these two files based on the code shown. All the imported functions (`registerVendor`, `loginVendor`, `listVendors`) are correctly exported and used in `vendorRoutes.js`.
+
+This means the crashing `router.get()` is either:
+
+A. **In your main `server.js` or `app.js` file:** You are calling `app.get()` with an undefined handler there.
+B. **In another route file** that gets loaded before the server crashes (e.g., `productRoutes.js`).
+C. **There is an issue with the `permit('admin')` middleware** that is causing `listVendors` to become `undefined` when the server loads.
+
+### 🛠️ The Most Likely Fix: Middleware Import Failure
+
+Since your code structure is good, the most common server crash at startup comes from a failing import or middleware setup. Let's fix the `listVendors` route by ensuring the middleware is handled correctly and is not causing the handler to become undefined.
+
+In your `vendorRoutes.js` (Screenshot 2), you use:
+
+```javascript
+const { permit } = require('../controllers/authMiddleware'); // Assuming this import exists
+// ...
+router.get('/listVendors', permit('admin'), listVendors);
