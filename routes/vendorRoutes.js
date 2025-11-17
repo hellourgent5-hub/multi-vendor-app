@@ -1,8 +1,12 @@
 const express = require('express');
-const router = express.Router(); // <--- FIX: Initialize router here!
+const router = express.Router();
 const { body } = require('express-validator');
 
-// Assuming authMiddleware is required for protect/permit
+// ⚠️ IMPORTANT: YOU MUST CORRECT THIS PATH!
+// If your authMiddleware is in a folder named 'middleware' in the root, 
+// the path is likely correct. If not, change the path here.
+// Example: If it's in a file named 'auth.js' in the 'middleware' folder:
+// const { protect, permit } = require('../middleware/auth');
 const { protect, permit } = require('../middleware/authMiddleware'); 
 
 // Assuming vendorController has the correct exports
@@ -26,10 +30,7 @@ router.post('/register',
 // @access  Public
 router.post('/login', loginVendor);
 
-// @route   GET /api/vendors/listVendors
-// @desc    Get all vendors (Admin only)
-// @access  Private/Admin
-// NOTE: Temporarily commented out to prevent startup crash related to middleware loading
+// NOTE: This route is still commented out until the server starts successfully.
 // router.get('/listVendors', protect, permit('admin'), listVendors); 
 
 
