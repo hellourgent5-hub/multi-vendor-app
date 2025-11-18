@@ -1,16 +1,13 @@
-const express = require('express');
+import express from 'express';
+import { protect } from '../middlewares/authMiddleware.js';
+import User from '../models/User.js';
+
 const router = express.Router();
-const { body } = require('express-validator');
-const { registerUser, loginUser, getProfile } = require('../controllers/userController');
-const { protect } = require('../middlewares/authMiddleware');
 
-router.post('/register', [
-  body('name').notEmpty(),
-  body('email').isEmail(),
-  body('password').isLength({ min: 6 })
-], registerUser);
+// Get current user info
+router.get('/me', protect, async (req, res) => {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json(user);
+});
 
-router.post('/login', loginUser);
-router.get('/profile', protect, getProfile);
-
-module.exports = router;
+export default router;
