@@ -1,38 +1,62 @@
-const Product = require('../models/Product');
-const { validationResult } = require('express-validator');
+import Product from '../models/Product.js';
+import Vendor from '../models/Vendor.js';
 
-const createProduct = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) return res.status(400).json({ errors: errors.array() });
-  if (!req.user) return res.status(401).json({ message: 'Not authorized' });
-  // vendor or admin can create, but vendor id used
-  const vendorId = req.user.role === 'vendor' ? req.user._id : req.body.vendor;
-  const { name, description, price, stock, category } = req.body;
-  const product = await Product.create({ vendor: vendorId, name, description, price, stock, category });
-  res.status(201).json(product);
+// Create product (Vendor only)
+export const createProduct = async (req, res) => {
+    try {
+        const { name, description, price, stock, images, category } = req.body;
+        const vendor = await Vendor.findOne({ user: req.user.id });
+        if (!vendor) return res.status(400).json({ message: 'Vendor profile not found' });
+
+        const product = await Product.create({
+            vendor: vendor._id,
+            name,
+            description,
+            price,
+            stock,
+            images,
+            category
+        });
+
+        vendor.products.push(product._id);
+        await vendor.save();
+
+        res.status(201).json(product);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
 
-const getProducts = async (req, res) => {
-  const products = await Product.find().populate('vendor', 'shopName');
-  res.json(products);
+// Get all products
+export const getProducts = async (req, res) => {
+    try {
+        const products = await Product.find().populate('vendor', 'shopName');
+        res.status(200).json(products);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
 
-const updateProduct = async (req, res) => {
-  const p = await Product.findById(req.params.id);
-  if (!p) return res.status(404).json({ message: 'Product not found' });
-  // only vendor owner or admin
-  if (req.user.role === 'vendor' && p.vendor.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not allowed' });
-  Object.assign(p, req.body);
-  await p.save();
-  res.json(p);
+// Get product by ID
+export const getProductById = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id).populate('vendor', 'shopName');
+        if (!product) return res.status(404).json({ message: 'Product not found' });
+        res.status(200).json(product);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
 };
 
-const deleteProduct = async (req, res) => {
-  const p = await Product.findById(req.params.id);
-  if (!p) return res.status(404).json({ message: 'Product not found' });
-  if (req.user.role === 'vendor' && p.vendor.toString() !== req.user._id.toString()) return res.status(403).json({ message: 'Not allowed' });
-  await p.remove();
-  res.json({ message: 'Product removed' });
-};
+// Delete product (Vendor or Admin)
+export const deleteProduct = async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+        if (!product) return res.status(404).json({ message: 'Product not found' });
 
-module.exports = { createProduct, getProducts, updateProduct, deleteProduct };
+        await product.remove();
+        res.status(200).json({ message: 'Product deleted' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
