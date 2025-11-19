@@ -4,17 +4,31 @@ import Category from "./models/Category.js";
 
 dotenv.config();
 
-mongoose.connect(process.env.MONGO_URI).then(async () => {
-  console.log("MongoDB connected");
+const categories = [
+  {
+    name: "Electronics",
+    subcategories: ["Mobiles", "Laptops", "Cameras"],
+  },
+  {
+    name: "Clothing",
+    subcategories: ["Men", "Women", "Kids"],
+  },
+  {
+    name: "Home Appliances",
+    subcategories: ["Kitchen", "Living Room", "Bedroom"],
+  },
+];
 
-  await Category.deleteMany(); // clear old
-  await Category.insertMany([
-    { name: "Electronics", subcategories: ["Mobile Phones", "Laptops", "Cameras"] },
-    { name: "Fashion", subcategories: ["Men", "Women", "Kids"] },
-    { name: "Home & Kitchen", subcategories: ["Furniture", "Decor", "Appliances"] },
-    { name: "Sports", subcategories: ["Fitness", "Outdoor", "Indoor Games"] },
-  ]);
-
-  console.log("Seed completed");
-  process.exit();
-});
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(async () => {
+    console.log("MongoDB connected");
+    await Category.deleteMany(); // optional: clear existing categories
+    await Category.insertMany(categories);
+    console.log("Seed data added successfully!");
+    process.exit();
+  })
+  .catch((err) => {
+    console.error(err);
+    process.exit(1);
+  });
