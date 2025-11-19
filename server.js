@@ -8,6 +8,7 @@ import userRoutes from './routes/userRoutes.js';
 import vendorRoutes from './routes/vendorRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import orderRoutes from './routes/orderRoutes.js';
+import categoryRoutes from "./routes/categoryRoutes.js";
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
+app.use("/api/categories", categoryRoutes);
 
 // 👉 Connect MongoDB & Start Server
 mongoose
