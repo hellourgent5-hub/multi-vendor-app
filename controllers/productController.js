@@ -1,62 +1,78 @@
-import Product from '../models/Product.js';
-import Vendor from '../models/Vendor.js';
+import Product from "../models/Product.js";
+import Vendor from "../models/Vendor.js";
+import Module from "../models/Module.js";
+import Category from "../models/Category.js";
+import Subcategory from "../models/Subcategory.js";
 
-// Create product (Vendor only)
+// CREATE PRODUCT
 export const createProduct = async (req, res) => {
-    try {
-        const { name, description, price, stock, images, category } = req.body;
-        const vendor = await Vendor.findOne({ user: req.user.id });
-        if (!vendor) return res.status(400).json({ message: 'Vendor profile not found' });
+  try {
+    const { vendorId, moduleId, categoryId, subcategoryId, name, price, description, stock, images } = req.body;
 
-        const product = await Product.create({
-            vendor: vendor._id,
-            name,
-            description,
-            price,
-            stock,
-            images,
-            category
-        });
+    // Validate vendor
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) return res.status(400).json({ message: "Vendor not found" });
 
-        vendor.products.push(product._id);
-        await vendor.save();
+    // Validate module
+    const module = await Module.findById(moduleId);
+    if (!module) return res.status(400).json({ message: "Module not found" });
 
-        res.status(201).json(product);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+    // Validate category
+    const category = await Category.findById(categoryId);
+    if (!category) return res.status(400).json({ message: "Category not found" });
+
+    // Validate subcategory
+    const subcategory = await Subcategory.findById(subcategoryId);
+    if (!subcategory) return res.status(400).json({ message: "Subcategory not found" });
+
+    const product = new Product({
+      vendor: vendorId,
+      module: moduleId,
+      category: categoryId,
+      subcategory: subcategoryId,
+      name,
+      price,
+      description,
+      stock,
+      images
+    });
+
+    await product.save();
+
+    res.status(201).json({ message: "Product created", product });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-// Get all products
+// GET ALL PRODUCTS
 export const getProducts = async (req, res) => {
-    try {
-        const products = await Product.find().populate('vendor', 'shopName');
-        res.status(200).json(products);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+  try {
+    const products = await Product.find()
+      .populate("vendor")
+      .populate("module")
+      .populate("category")
+      .populate("subcategory");
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
 
-// Get product by ID
-export const getProductById = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id).populate('vendor', 'shopName');
-        if (!product) return res.status(404).json({ message: 'Product not found' });
-        res.status(200).json(product);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-};
+// GET SINGLE PRODUCT
+export const getProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id)
+      .populate("vendor")
+      .populate("module")
+      .populate("category")
+      .populate("subcategory");
 
-// Delete product (Vendor or Admin)
-export const deleteProduct = async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
-        if (!product) return res.status(404).json({ message: 'Product not found' });
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-        await product.remove();
-        res.status(200).json({ message: 'Product deleted' });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
 };
