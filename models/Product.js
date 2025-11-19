@@ -2,8 +2,19 @@ import mongoose from "mongoose";
 
 const productSchema = new mongoose.Schema(
   {
-    vendor: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor", required: true },
+    vendor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vendor",
+      required: true,
+    },
 
+    name: { type: String, required: true },
+    description: String,
+    price: { type: Number, required: true },
+    stock: { type: Number, default: 0 },
+    images: [String],
+
+    // 🔥 MODULE → CATEGORY → SUBCATEGORY (final correct)
     module: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Module",
@@ -21,16 +32,6 @@ const productSchema = new mongoose.Schema(
       ref: "SubCategory",
       required: true,
     },
-
-    name: { type: String, required: true },
-
-    description: { type: String },
-
-    price: { type: Number, required: true },
-
-    stock: { type: Number, default: 0 },
-
-    images: [String],
 
     reviews: [
       {
