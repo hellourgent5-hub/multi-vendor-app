@@ -2,7 +2,7 @@ import express from "express";
 import {
   createProduct,
   getProducts,
-  getProduct,
+  getProductById,
 } from "../controllers/productController.js";
 
 const router = express.Router();
@@ -14,6 +14,6 @@ router.post("/", createProduct);
 router.get("/", getProducts);
 
 // GET ONE PRODUCT
-router.get("/:id", getProduct);
+router.get("/:id", getProductById);
 
 export default router;
