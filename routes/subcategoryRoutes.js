@@ -1,5 +1,6 @@
 import express from "express";
 import Subcategory from "../models/Subcategory.js";
+import Category from "../models/Category.js";
 
 const router = express.Router();
 
@@ -13,11 +14,14 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST create subcategory
+// POST create a subcategory
 router.post("/", async (req, res) => {
-  const { name, category } = req.body;
+  const { name, categoryId } = req.body;
   try {
-    const newSubcategory = new Subcategory({ name, category });
+    const categoryExists = await Category.findById(categoryId);
+    if (!categoryExists) return res.status(404).json({ error: "Category not found" });
+
+    const newSubcategory = new Subcategory({ name, category: categoryId });
     const saved = await newSubcategory.save();
     res.status(201).json(saved);
   } catch (err) {
