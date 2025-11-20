@@ -1,13 +1,15 @@
-// routes/subcategoryRoutes.js
 import express from "express";
-import Subcategory from "../models/Subcategory.js";  // ✅ exact casing
+import Subcategory from "../models/Subcategory.js";
 
 const router = express.Router();
 
-// Example route
+// Get all subcategories
 router.get("/", async (req, res) => {
   try {
-    const subcategories = await Subcategory.find().populate("category");
+    const subcategories = await Subcategory.find().populate({
+      path: "category",
+      populate: { path: "module" }
+    });
     res.json(subcategories);
   } catch (err) {
     res.status(500).json({ error: err.message });
